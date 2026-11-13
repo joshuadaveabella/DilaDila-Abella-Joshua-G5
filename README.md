@@ -1,8 +1,8 @@
 # Dila-Dila: A Cebuano Phrase-Learning and Practice System for CIT-U Transferee Students
 
-CSIT327 – Information Management 2 · Abella, Joshua Dave G. · Section G5
+CSIT327 – Information Management 2 · Abella, Joshua Dave G. · G5
 
-Full-stack Django (templates) + PostgreSQL/Supabase.
+Full-stack Django (templates) + Supabase.
 
 ## Phase 1 – Account Feature
 - Registration with validation (required fields, email format, unique email, password confirmation, Django password rules) and hashed passwords

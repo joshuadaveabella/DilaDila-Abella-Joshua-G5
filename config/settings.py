@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load variables from the .env file (if it exists)
 load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-me")
@@ -22,7 +21,6 @@ DEBUG = os.environ.get("DEBUG", "True") == "True"
 ALLOWED_HOSTS = [h for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 
 
-# Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -63,14 +61,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-# Database: PostgreSQL only (works for a local Postgres or Supabase).
-# Example DATABASE_URL:
-#   postgresql://user:password@localhost:5432/dila_dila
-# For Supabase, copy the connection string from Project Settings > Database.
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip().strip("\"'")
 if not DATABASE_URL:
     raise ImproperlyConfigured(
         "DATABASE_URL is not set. Copy .env.example to .env and fill in your PostgreSQL/Supabase connection string."
+    )
+if not DATABASE_URL.startswith(("postgres://", "postgresql://")):
+    raise ImproperlyConfigured(
+        "DATABASE_URL must start with postgresql:// (check your .env). Example: "
+        "postgresql://user:password@host:5432/dbname"
     )
 
 DATABASES = {
@@ -82,16 +81,13 @@ DATABASES = {
 }
 
 
-# Custom user model (see accounts/models.py)
 AUTH_USER_MODEL = "accounts.User"
 
-# Authentication redirects
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "accounts:dashboard"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -100,14 +96,12 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Manila"
 USE_I18N = True
 USE_TZ = True
 
 
-# Static files
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
