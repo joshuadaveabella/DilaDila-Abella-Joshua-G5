@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard{% endblock %}
+{% block content %}
+<h1>Admin dashboard</h1>
+<p class="muted">Signed in as {{ user.full_name }} · Administrator</p>
+
+<div class="grid stats">
+  <div class="card stat"><span class="num">{{ total_users }}</span><span class="muted">Total users</span></div>
+  <div class="card stat"><span class="num">{{ total_students }}</span><span class="muted">Students</span></div>
+  <div class="card stat"><span class="num">{{ total_admins }}</span><span class="muted">Administrators</span></div>
+</div>
+
+<section class="card">
+  <h2>Newest accounts</h2>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+    <tbody>
+      {% for u in recent_users %}
+        <tr><td>{{ u.full_name }}</td><td>{{ u.email }}</td><td>{{ u.get_role_display }}</td><td>{{ u.created_at|date:"M d, Y" }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div class="grid">
+  <article class="card tile">
+    <h2>Phrase &amp; quiz management</h2>
+    <p class="muted">Add and edit phrases, categories and quiz questions.</p>
+    <span class="badge">Coming soon</span>
+  </article>
+  <article class="card tile">
+    <h2>Django admin</h2>
+    <p class="muted">Manage user accounts and roles directly.</p>
+    <a class="btn btn-small" href="{% url 'admin:index' %}">Open</a>
+  </article>
+</div>
+{% endblock %}

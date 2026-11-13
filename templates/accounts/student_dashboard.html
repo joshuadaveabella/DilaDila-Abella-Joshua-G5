@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Student dashboard{% endblock %}
+{% block content %}
+<h1>Kumusta, {{ user.get_short_name }}!</h1>
+<p class="muted">Your learning space. More tools arrive as the system grows.</p>
+
+<div class="grid">
+  <article class="card tile">
+    <h2>Phrase library</h2>
+    <p class="muted">Browse everyday Bisaya phrases by situation.</p>
+    <span class="badge">Coming soon</span>
+  </article>
+  <article class="card tile">
+    <h2>Quizzes</h2>
+    <p class="muted">Test yourself with flashcards and multiple-choice.</p>
+    <span class="badge">Coming soon</span>
+  </article>
+  <article class="card tile">
+    <h2>My phrasebook</h2>
+    <p class="muted">Save phrases you hear in real conversations.</p>
+    <span class="badge">Coming soon</span>
+  </article>
+  <article class="card tile">
+    <h2>My profile</h2>
+    <p class="muted">Update your name, email and home region.</p>
+    <a class="btn btn-small" href="{% url 'accounts:profile' %}">Open profile</a>
+  </article>
+</div>
+{% endblock %}

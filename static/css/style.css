@@ -1,0 +1,81 @@
+:root {
+  --green: #2E7D32;
+  --green-dark: #1f5a23;
+  --cream: #faf7f0;
+  --ink: #1d2a1f;
+  --muted: #5d6b5f;
+  --line: #e3dfd2;
+  --danger: #b3261e;
+  --card: #ffffff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: "Inter", system-ui, sans-serif; color: var(--ink);
+  background: var(--cream); line-height: 1.55; min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+h1, h2 { font-family: "Fraunces", Georgia, serif; font-weight: 600; margin: 0 0 .4rem; }
+h1 { font-size: 2rem; } h2 { font-size: 1.2rem; }
+a { color: var(--green); }
+.muted { color: var(--muted); } .center { text-align: center; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1.5rem; background: var(--card); border-bottom: 1px solid var(--line);
+}
+.brand { font-family: "Fraunces", serif; font-size: 1.5rem; text-decoration: none; color: var(--ink); }
+.brand span { color: var(--green); }
+.topbar nav { display: flex; align-items: center; gap: 1.1rem; }
+.topbar nav a { text-decoration: none; color: var(--ink); font-weight: 500; }
+.topbar nav a:hover { color: var(--green); }
+.pill { background: var(--green); color: #fff !important; padding: .4rem .9rem; border-radius: 999px; }
+.pill:hover { background: var(--green-dark); color: #fff !important; }
+form.inline { display: inline; margin: 0; }
+.link-button { background: none; border: 0; padding: 0; font: inherit; font-weight: 500; cursor: pointer; color: var(--ink); }
+.link-button:hover { color: var(--green); }
+
+.container { width: 100%; max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem; flex: 1; }
+.footer { text-align: center; padding: 1.5rem; color: var(--muted); font-size: .85rem; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; margin-bottom: 1.25rem; }
+.auth-card { max-width: 440px; margin: 1rem auto; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+.grid .card { margin: 0; }
+.tile .btn, .tile .badge { margin-top: .6rem; }
+.stat { display: flex; flex-direction: column; }
+.stat .num { font-family: "Fraunces", serif; font-size: 2.2rem; color: var(--green); }
+
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-weight: 500; margin-bottom: .3rem; font-size: .92rem; }
+.field input, .field select {
+  width: 100%; padding: .65rem .8rem; font: inherit; border: 1px solid var(--line);
+  border-radius: 8px; background: #fff;
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--green); border-color: var(--green); }
+.field.has-error input, .field.has-error select { border-color: var(--danger); }
+.error { color: var(--danger); font-size: .85rem; margin: .3rem 0 0; }
+
+.btn {
+  display: inline-block; background: var(--green); color: #fff; border: 0; border-radius: 8px;
+  padding: .65rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.btn:hover { background: var(--green-dark); }
+.btn-small { padding: .4rem .9rem; font-size: .9rem; }
+.btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn-ghost:hover { background: var(--cream); }
+.actions { display: flex; gap: .6rem; }
+form > .btn { width: 100%; margin-top: .3rem; }
+.actions .btn { width: auto; }
+.badge { display: inline-block; font-size: .75rem; background: #eef3ea; color: var(--green-dark); padding: .15rem .6rem; border-radius: 999px; }
+
+.alert { padding: .75rem 1rem; border-radius: 8px; margin-bottom: .6rem; border: 1px solid; }
+.alert-success { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+.alert-error { background: #fdecea; border-color: #f5b5b0; color: var(--danger); }
+.alert-info { background: #e8f0fe; border-color: #b6c9f5; color: #1a3d8f; }
+
+.details { display: grid; grid-template-columns: 130px 1fr; gap: .5rem 1rem; margin: 1rem 0 1.5rem; }
+.details dt { color: var(--muted); } .details dd { margin: 0; font-weight: 500; }
+
+.table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.table th, .table td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid var(--line); }
+.table th { color: var(--muted); font-weight: 500; }
