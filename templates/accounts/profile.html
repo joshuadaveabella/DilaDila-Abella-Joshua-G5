@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <h1>My profile</h1>
+  <dl class="details">
+    <dt>Full name</dt><dd>{{ user.full_name }}</dd>
+    <dt>Email</dt><dd>{{ user.email }}</dd>
+    <dt>Home region</dt><dd>{{ user.home_region|default:"Not set" }}</dd>
+    <dt>Role</dt><dd>{{ user.get_role_display }}</dd>
+    <dt>Member since</dt><dd>{{ user.created_at|date:"F d, Y" }}</dd>
+  </dl>
+  <a class="btn" href="{% url 'accounts:profile_edit' %}">Edit profile</a>
+</section>
+{% endblock %}
