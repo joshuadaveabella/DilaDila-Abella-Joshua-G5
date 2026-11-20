@@ -119,11 +119,13 @@ class CrudTests(PhrasebookTestBase):
     def test_create_requires_phrase_or_text(self):
         response = self.client.post(reverse("phrasebook:entry_create"), {"phrase": "", "custom_text": "   ", "note": "x"})
         self.assertContains(response, "Choose a library phrase or type your own phrase")
+        self.assertNotContains(response, "is violated")  # no raw database message
         self.assertEqual(PhrasebookEntry.objects.filter(user=self.maria).count(), 1)
 
     def test_duplicate_library_phrase_rejected(self):
         response = self.client.post(reverse("phrasebook:entry_create"), {"phrase": self.phrase.pk, "custom_text": "", "note": ""})
-        self.assertContains(response, "already in your phrasebook")
+        self.assertContains(response, "already in your phrasebook", count=1)
+        self.assertNotContains(response, "is violated")
 
     def test_inactive_phrase_cannot_be_chosen(self):
         response = self.client.post(reverse("phrasebook:entry_create"), {"phrase": self.inactive.pk, "custom_text": "", "note": ""})

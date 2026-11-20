@@ -31,6 +31,13 @@ class PhrasebookEntryForm(forms.ModelForm):
         self.fields["phrase"].queryset = Phrase.objects.filter(allowed).select_related("category")
         self.fields["phrase"].label_from_instance = lambda p: f"{p.cebuano_text} — {p.english_translation}"
 
+    def _get_validation_exclusions(self):
+        # The phrase/text rule and the duplicate rule are checked in clean() with friendly messages.
+        # Excluding these fields stops Django from adding a second, technical constraint message.
+        exclude = super()._get_validation_exclusions()
+        exclude.update({"phrase", "custom_text"})
+        return exclude
+
     def clean_custom_text(self):
         # Store NULL instead of an empty string so the database CHECK constraint works
         return self.cleaned_data["custom_text"].strip() or None
