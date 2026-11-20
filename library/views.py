@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from accounts.models import User
+from phrasebook.models import PhrasebookEntry
 
 from .forms import CategoryForm, PhraseForm
 from .models import Category, Phrase
@@ -41,11 +42,20 @@ def phrase_list(request):
     phrases, q, category_id = _filter_phrases(
         request, Phrase.objects.filter(is_active=True).select_related("category")
     )
+    page = _page(request, phrases)
+    saved_ids = set()
+    if request.user.role == User.Role.STUDENT:
+        # Which of the phrases on this page the student already saved
+        saved_ids = set(
+            PhrasebookEntry.objects.filter(user=request.user, phrase__in=list(page.object_list))
+            .values_list("phrase_id", flat=True)
+        )
     context = {
-        "page": _page(request, phrases),
+        "page": page,
         "categories": Category.objects.all(),
         "q": q,
         "selected_category": category_id,
+        "saved_ids": saved_ids,
     }
     return render(request, "library/phrase_list.html", context)
 
