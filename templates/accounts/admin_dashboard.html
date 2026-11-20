@@ -8,6 +8,8 @@
   <div class="card stat"><span class="num">{{ total_users }}</span><span class="muted">Total users</span></div>
   <div class="card stat"><span class="num">{{ total_students }}</span><span class="muted">Students</span></div>
   <div class="card stat"><span class="num">{{ total_admins }}</span><span class="muted">Administrators</span></div>
+  <div class="card stat"><span class="num">{{ total_phrases }}</span><span class="muted">Phrases</span></div>
+  <div class="card stat"><span class="num">{{ total_categories }}</span><span class="muted">Categories</span></div>
 </div>
 
 <section class="card">
@@ -24,9 +26,9 @@
 
 <div class="grid">
   <article class="card tile">
-    <h2>Phrase &amp; quiz management</h2>
-    <p class="muted">Add and edit phrases, categories and quiz questions.</p>
-    <span class="badge">Coming soon</span>
+    <h2>Phrase library</h2>
+    <p class="muted">Add, edit, deactivate and delete phrases and categories.</p>
+    <a class="btn btn-small" href="{% url 'library:manage_phrases' %}">Manage phrases</a>
   </article>
   <article class="card tile">
     <h2>Django admin</h2>

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Manage categories{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Manage categories</h1>
+    <p class="muted"><a href="{% url 'library:manage_phrases' %}">&laquo; Back to phrases</a></p>
+  </div>
+  <a class="btn btn-small" href="{% url 'library:category_create' %}">+ Add category</a>
+</div>
+<div class="card table-wrap">
+  <table class="table">
+    <thead><tr><th>Name</th><th>Description</th><th>Phrases</th><th class="right">Actions</th></tr></thead>
+    <tbody>
+      {% for c in categories %}
+        <tr>
+          <td><strong>{{ c.name }}</strong></td>
+          <td>{{ c.description|default:"—" }}</td>
+          <td>{{ c.phrase_count }}</td>
+          <td class="right actions-cell">
+            <a href="{% url 'library:category_update' c.pk %}">Edit</a>
+            <a class="danger" href="{% url 'library:category_delete' c.pk %}">Delete</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="muted center">No categories yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
