@@ -104,3 +104,10 @@ a.danger, .danger { color: var(--danger) !important; }
 .pagination { display: flex; gap: 1rem; justify-content: center; align-items: center; margin: 1.5rem 0; }
 .auth-card.wide { max-width: 560px; }
 .field input[type=checkbox] { width: auto; margin-right: .4rem; }
+
+/* ---- Phrasebook ---- */
+.note { font-style: italic; color: var(--muted); margin: .3rem 0; }
+.actions-cell.left > * { margin-left: 0; margin-right: .9rem; }
+.badge.saved { background: #e8f5e9; margin-top: .6rem; }
+.phrase-card form { margin-top: .5rem; }
+.phrase-card form .btn { width: auto; }

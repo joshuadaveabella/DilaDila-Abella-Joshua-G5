@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Student phrasebooks{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Student phrasebooks</h1>
+    <p class="muted">Read-only view of what students are saving. {{ page.paginator.count }} entr{{ page.paginator.count|pluralize:"y,ies" }}.</p>
+  </div>
+</div>
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search phrase or note…">
+  <input type="search" name="student" value="{{ student }}" placeholder="Student name or email">
+  <select name="category">
+    <option value="">All categories</option>
+    {% for c in categories %}<option value="{{ c.pk }}" {% if selected_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn btn-small">Search</button>
+  <a class="btn btn-small btn-ghost" href="{% url 'phrasebook:all_phrasebooks' %}">Clear</a>
+</form>
+<div class="card table-wrap">
+  <table class="table">
+    <thead><tr><th>Student</th><th>Phrase</th><th>Source</th><th>Note</th><th>Saved</th></tr></thead>
+    <tbody>
+      {% for e in page.object_list %}
+        <tr>
+          <td>{{ e.user.full_name }}<br><span class="muted small">{{ e.user.email }}</span></td>
+          <td><strong>{{ e.display_text }}</strong>{% if e.phrase %}<br><span class="muted small">{{ e.phrase.english_translation }}</span>{% endif %}</td>
+          <td>{% if e.phrase %}Library · {{ e.phrase.category.name }}{% else %}Own phrase{% endif %}</td>
+          <td>{{ e.note|default:"—" }}</td>
+          <td>{{ e.created_at|date:"M d, Y" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="muted center">No entries found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "library/_pagination.html" %}
+{% endblock %}
