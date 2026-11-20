@@ -63,24 +63,34 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "").strip().strip("\"'")
+
+USE_LOCAL_TEST_DB = os.environ.get("USE_LOCAL_TEST_DB", "False") == "True"
+
+if USE_LOCAL_TEST_DB:
+    DATABASE_URL = os.environ.get("LOCAL_TEST_DATABASE_URL", "").strip().strip("\"'")
+else:
+    DATABASE_URL = os.environ.get("DATABASE_URL", "").strip().strip("\"'")
+
 if not DATABASE_URL:
     raise ImproperlyConfigured(
-        "DATABASE_URL is not set. Copy .env.example to .env and fill in your PostgreSQL/Supabase connection string."
+        "Database URL is not set. Check your .env configuration."
     )
+
 if not DATABASE_URL.startswith(("postgres://", "postgresql://")):
     raise ImproperlyConfigured(
-        "DATABASE_URL must start with postgresql:// (check your .env). Example: "
-        "postgresql://user:password@host:5432/dbname"
+        "DATABASE_URL must start with postgresql://"
     )
 
 DATABASES = {
     "default": dj_database_url.parse(
         DATABASE_URL,
         conn_max_age=600,
-        ssl_require=os.environ.get("DB_SSL_REQUIRE", "False") == "True",
+        ssl_require=False if USE_LOCAL_TEST_DB else (
+            os.environ.get("DB_SSL_REQUIRE", "False") == "True"
+        ),
     )
 }
+
 
 
 AUTH_USER_MODEL = "accounts.User"
