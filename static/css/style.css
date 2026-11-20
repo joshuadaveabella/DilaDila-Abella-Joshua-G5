@@ -79,3 +79,35 @@ form > .btn { width: 100%; margin-top: .3rem; }
 .table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .table th, .table td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid var(--line); }
 .table th { color: var(--muted); font-weight: 500; }
+
+/* ---- Phrase library ---- */
+.page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filters { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.filters input[type=search] { flex: 1 1 220px; }
+.filters input, .filters select { padding: .55rem .8rem; font: inherit; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.filters .btn { width: auto; margin: 0; }
+.grid.phrases { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.phrase-card h2 { margin: .5rem 0 .2rem; font-size: 1.3rem; }
+.phrase-card .translation { margin: 0 0 .4rem; font-weight: 500; }
+.phrase-card audio { width: 100%; margin-top: .5rem; height: 36px; }
+.small { font-size: .85rem; }
+.card.empty { text-align: center; padding: 2rem; }
+.card.table-wrap { padding: .5rem 1rem; overflow-x: auto; }
+.right { text-align: right !important; }
+.actions-cell { white-space: nowrap; }
+.actions-cell > * { margin-left: .7rem; font-size: .9rem; }
+.actions-cell .link-button { color: var(--green); }
+a.danger, .danger { color: var(--danger) !important; }
+.badge-off { background: #f1ebe6; color: #7a5b45; }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #8c1d17; }
+.pagination { display: flex; gap: 1rem; justify-content: center; align-items: center; margin: 1.5rem 0; }
+.auth-card.wide { max-width: 560px; }
+.field input[type=checkbox] { width: auto; margin-right: .4rem; }
+
+/* ---- Phrasebook ---- */
+.note { font-style: italic; color: var(--muted); margin: .3rem 0; }
+.actions-cell.left > * { margin-left: 0; margin-right: .9rem; }
+.badge.saved { background: #e8f5e9; margin-top: .6rem; }
+.phrase-card form { margin-top: .5rem; }
+.phrase-card form .btn { width: auto; }

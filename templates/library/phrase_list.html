@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Phrase library{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Phrase library</h1>
+    <p class="muted">{{ page.paginator.count }} phrase{{ page.paginator.count|pluralize }} found. Search, filter by situation, and listen to how each one sounds.</p>
+  </div>
+  {% if user.role == "ADMIN" %}<a class="btn btn-small" href="{% url 'library:manage_phrases' %}">Manage library</a>{% endif %}
+</div>
+
+{% include "library/_filters.html" %}
+
+{% if page.object_list %}
+  <div class="grid phrases">
+    {% for phrase in page.object_list %}
+      <article class="card phrase-card">
+        <span class="badge">{{ phrase.category.name }}</span>
+        <h2>{{ phrase.cebuano_text }}</h2>
+        <p class="translation">{{ phrase.english_translation }}</p>
+        {% if phrase.regional_translation %}
+          <p class="muted small">{{ phrase.regional_language }}: {{ phrase.regional_translation }}</p>
+        {% endif %}
+        {% if phrase.audio_url %}<audio controls preload="none" src="{{ phrase.audio_url }}"></audio>{% endif %}
+        {% if user.role == "STUDENT" %}
+          {% if phrase.pk in saved_ids %}
+            <span class="badge saved">&#10003; In your phrasebook</span>
+          {% else %}
+            <form method="post" action="{% url 'phrasebook:save_from_library' phrase.pk %}">
+              {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-small btn-ghost">+ Save to my phrasebook</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      </article>
+    {% endfor %}
+  </div>
+  {% include "library/_pagination.html" %}
+{% else %}
+  <div class="card empty">
+    <p>No phrases match your search.</p>
+    <a class="btn btn-small" href="{% url 'library:phrase_list' %}">Show all phrases</a>
+  </div>
+{% endif %}
+{% endblock %}
