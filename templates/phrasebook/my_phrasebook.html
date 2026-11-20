@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My phrasebook{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>My phrasebook</h1>
+    <p class="muted">{{ page.paginator.count }} saved phrase{{ page.paginator.count|pluralize }}. Keep the phrases you actually hear on campus.</p>
+  </div>
+  <a class="btn btn-small" href="{% url 'phrasebook:entry_create' %}">+ Add entry</a>
+</div>
+
+{% include "library/_filters.html" %}
+
+{% if page.object_list %}
+  <div class="grid phrases">
+    {% for e in page.object_list %}
+      <article class="card phrase-card">
+        {% if e.phrase %}
+          <span class="badge">{{ e.phrase.category.name }}</span>
+          <h2>{{ e.phrase.cebuano_text }}</h2>
+          <p class="translation">{{ e.phrase.english_translation }}</p>
+          {% if e.custom_text %}<p class="muted small">My version: {{ e.custom_text }}</p>{% endif %}
+        {% else %}
+          <span class="badge badge-off">My own phrase</span>
+          <h2>{{ e.custom_text }}</h2>
+        {% endif %}
+        {% if e.note %}<p class="note">“{{ e.note }}”</p>{% endif %}
+        <p class="muted small">Saved {{ e.created_at|date:"M d, Y" }}</p>
+        <div class="actions-cell left">
+          <a href="{% url 'phrasebook:entry_update' e.pk %}">Edit</a>
+          <a class="danger" href="{% url 'phrasebook:entry_delete' e.pk %}">Delete</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+  {% include "library/_pagination.html" %}
+{% else %}
+  <div class="card empty">
+    <p>{% if q or selected_category %}No entries match your search.{% else %}Your phrasebook is empty.{% endif %}</p>
+    <a class="btn btn-small" href="{% url 'library:phrase_list' %}">Browse the library</a>
+    <a class="btn btn-small btn-ghost" href="{% url 'phrasebook:entry_create' %}">Add your own</a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -22,6 +22,16 @@
           <p class="muted small">{{ phrase.regional_language }}: {{ phrase.regional_translation }}</p>
         {% endif %}
         {% if phrase.audio_url %}<audio controls preload="none" src="{{ phrase.audio_url }}"></audio>{% endif %}
+        {% if user.role == "STUDENT" %}
+          {% if phrase.pk in saved_ids %}
+            <span class="badge saved">&#10003; In your phrasebook</span>
+          {% else %}
+            <form method="post" action="{% url 'phrasebook:save_from_library' phrase.pk %}">
+              {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="btn btn-small btn-ghost">+ Save to my phrasebook</button>
+            </form>
+          {% endif %}
+        {% endif %}
       </article>
     {% endfor %}
   </div>
