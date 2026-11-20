@@ -15,6 +15,10 @@
     <nav>
       {% if user.is_authenticated %}
         <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
+        <a href="{% url 'library:phrase_list' %}">Phrase library</a>
+        {% if user.role == "STUDENT" %}<a href="{% url 'phrasebook:my_phrasebook' %}">My phrasebook</a>{% endif %}
+        {% if user.role == "ADMIN" %}<a href="{% url 'library:manage_phrases' %}">Manage</a>
+        <a href="{% url 'phrasebook:all_phrasebooks' %}">Phrasebooks</a>{% endif %}
         <a href="{% url 'accounts:profile' %}">Profile</a>
         <form method="post" action="{% url 'accounts:logout' %}" class="inline">
           {% csrf_token %}

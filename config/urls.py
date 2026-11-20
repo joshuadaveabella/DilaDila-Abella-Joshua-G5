@@ -7,6 +7,8 @@ urlpatterns = [
     path("", account_views.home, name="home"),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
+    path("library/", include("library.urls")),
+    path("phrasebook/", include("phrasebook.urls")),
 ]
 
 handler403 = "accounts.views.permission_denied"

@@ -1,0 +1,18 @@
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search Cebuano or English…" aria-label="Search phrases">
+  <select name="category" aria-label="Filter by category">
+    <option value="">All categories</option>
+    {% for c in categories %}
+      <option value="{{ c.pk }}" {% if selected_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  {% if show_status %}
+  <select name="status" aria-label="Filter by status">
+    <option value="">Any status</option>
+    <option value="active" {% if status == "active" %}selected{% endif %}>Active</option>
+    <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Inactive</option>
+  </select>
+  {% endif %}
+  <button type="submit" class="btn btn-small">Search</button>
+  <a class="btn btn-small btn-ghost" href="{{ request.path }}">Clear</a>
+</form>

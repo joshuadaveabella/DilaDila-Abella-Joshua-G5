@@ -7,8 +7,8 @@
 <div class="grid">
   <article class="card tile">
     <h2>Phrase library</h2>
-    <p class="muted">Browse everyday Bisaya phrases by situation.</p>
-    <span class="badge">Coming soon</span>
+    <p class="muted">Browse everyday Bisaya phrases by situation. {{ phrase_count }} available.</p>
+    <a class="btn btn-small" href="{% url 'library:phrase_list' %}">Browse phrases</a>
   </article>
   <article class="card tile">
     <h2>Quizzes</h2>
@@ -17,8 +17,8 @@
   </article>
   <article class="card tile">
     <h2>My phrasebook</h2>
-    <p class="muted">Save phrases you hear in real conversations.</p>
-    <span class="badge">Coming soon</span>
+    <p class="muted">Save phrases you hear in real conversations. {{ entry_count }} saved.</p>
+    <a class="btn btn-small" href="{% url 'phrasebook:my_phrasebook' %}">Open phrasebook</a>
   </article>
   <article class="card tile">
     <h2>My profile</h2>
