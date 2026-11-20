@@ -135,6 +135,10 @@ class AdminPhraseCrudTests(LibraryTestBase):
         self.assertContains(response, "already exists in the selected category")
         self.assertEqual(Phrase.objects.count(), 3)
 
+    def test_exact_duplicate_shows_one_message(self):
+        response = self.client.post(reverse("library:phrase_create"), self.data(cebuano_text="Asa ang classroom?"))
+        self.assertContains(response, "already exists", count=1)
+
     def test_invalid_audio_url_rejected(self):
         response = self.client.post(reverse("library:phrase_create"), self.data(audio_url="not a url"))
         self.assertContains(response, "valid URL")
