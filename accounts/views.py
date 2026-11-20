@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from .decorators import role_required
 from .forms import EmailLoginForm, ProfileForm, RegistrationForm
 from .models import User
+from library.models import Category, Phrase
 
 
 def home(request):
@@ -52,7 +53,8 @@ def dashboard(request):
 
 @role_required(User.Role.STUDENT)
 def student_dashboard(request):
-    return render(request, "accounts/student_dashboard.html")
+    context = {"phrase_count": Phrase.objects.filter(is_active=True).count()}
+    return render(request, "accounts/student_dashboard.html", context)
 
 
 @role_required(User.Role.ADMIN)
@@ -61,6 +63,8 @@ def admin_dashboard(request):
         "total_users": User.objects.count(),
         "total_students": User.objects.filter(role=User.Role.STUDENT).count(),
         "total_admins": User.objects.filter(role=User.Role.ADMIN).count(),
+        "total_phrases": Phrase.objects.count(),
+        "total_categories": Category.objects.count(),
         "recent_users": User.objects.order_by("-created_at")[:5],
     }
     return render(request, "accounts/admin_dashboard.html", context)

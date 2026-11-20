@@ -15,6 +15,8 @@
     <nav>
       {% if user.is_authenticated %}
         <a href="{% url 'accounts:dashboard' %}">Dashboard</a>
+        <a href="{% url 'library:phrase_list' %}">Phrase library</a>
+        {% if user.role == "ADMIN" %}<a href="{% url 'library:manage_phrases' %}">Manage</a>{% endif %}
         <a href="{% url 'accounts:profile' %}">Profile</a>
         <form method="post" action="{% url 'accounts:logout' %}" class="inline">
           {% csrf_token %}

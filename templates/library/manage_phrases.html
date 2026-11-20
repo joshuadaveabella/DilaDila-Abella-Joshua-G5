@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Manage phrases{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Manage phrases</h1>
+    <p class="muted">{{ page.paginator.count }} phrase{{ page.paginator.count|pluralize }} · <a href="{% url 'library:manage_categories' %}">Manage categories</a></p>
+  </div>
+  <a class="btn btn-small" href="{% url 'library:phrase_create' %}">+ Add phrase</a>
+</div>
+
+{% include "library/_filters.html" with show_status=True %}
+
+<div class="card table-wrap">
+  <table class="table">
+    <thead><tr><th>Cebuano</th><th>English</th><th>Category</th><th>Status</th><th class="right">Actions</th></tr></thead>
+    <tbody>
+      {% for p in page.object_list %}
+        <tr>
+          <td><strong>{{ p.cebuano_text }}</strong></td>
+          <td>{{ p.english_translation }}</td>
+          <td>{{ p.category.name }}</td>
+          <td>{% if p.is_active %}<span class="badge">Active</span>{% else %}<span class="badge badge-off">Inactive</span>{% endif %}</td>
+          <td class="right actions-cell">
+            <a href="{% url 'library:phrase_update' p.pk %}">Edit</a>
+            <form method="post" action="{% url 'library:phrase_toggle' p.pk %}" class="inline">
+              {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="link-button" type="submit">{% if p.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+            </form>
+            <a class="danger" href="{% url 'library:phrase_delete' p.pk %}">Delete</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="muted center">No phrases found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "library/_pagination.html" %}
+{% endblock %}

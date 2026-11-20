@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="card auth-card">
+  <h1>{{ title }}</h1>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% include "accounts/_form_fields.html" %}
+    <div class="actions">
+      <button type="submit" class="btn">Save category</button>
+      <a class="btn btn-ghost" href="{% url 'library:manage_categories' %}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
