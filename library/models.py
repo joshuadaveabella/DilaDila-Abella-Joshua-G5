@@ -1,5 +1,16 @@
+import os
+import uuid
+
 from django.db import models
 from django.utils import timezone
+
+from .validators import validate_audio_file
+
+
+def phrase_audio_path(instance, filename):
+    """Store audio under a random name so uploaded file names can never clash or contain odd characters."""
+    ext = os.path.splitext(filename)[1].lower()
+    return f"phrase_audio/{uuid.uuid4().hex}{ext}"
 
 
 class Category(models.Model):
@@ -31,6 +42,8 @@ class Phrase(models.Model):
     regional_language = models.CharField(max_length=50, blank=True)
     regional_translation = models.CharField(max_length=255, blank=True)
     audio_url = models.URLField(max_length=255, blank=True)
+    # Uploaded pronunciation clip (ISS-01). If both are set, the uploaded file is played.
+    audio_file = models.FileField(upload_to=phrase_audio_path, blank=True, validators=[validate_audio_file])
     # Phrases that are still referenced elsewhere are deactivated instead of deleted (BR-15)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -45,3 +58,10 @@ class Phrase(models.Model):
 
     def __str__(self):
         return self.cebuano_text
+
+    @property
+    def audio_src(self):
+        """The audio the player should use: the uploaded file first, otherwise the external link."""
+        if self.audio_file:
+            return self.audio_file.url
+        return self.audio_url

@@ -117,4 +117,11 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# Uploaded files (phrase audio)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+# Reject oversized request bodies early (audio limit is 5 MB; leave room for the form fields)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
