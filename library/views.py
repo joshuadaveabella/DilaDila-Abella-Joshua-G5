@@ -5,10 +5,12 @@ from django.db import transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from accounts.models import User
+from accounts.utils import clean_param, safe_redirect
 from phrasebook.models import PhrasebookEntry
 
 from .forms import CategoryForm, PhraseForm
@@ -19,8 +21,8 @@ admin_only = role_required(User.Role.ADMIN)
 
 def _filter_phrases(request, queryset):
     """Apply the ?q= search and ?category= filter from the URL."""
-    q = request.GET.get("q", "").strip()
-    category_id = request.GET.get("category", "").strip()
+    q = clean_param(request, "q")
+    category_id = clean_param(request, "category", 10)
     if q:
         queryset = queryset.filter(
             Q(cebuano_text__icontains=q)
@@ -66,7 +68,7 @@ def phrase_list(request):
 @admin_only
 def manage_phrases(request):
     phrases, q, category_id = _filter_phrases(request, Phrase.objects.select_related("category"))
-    status = request.GET.get("status", "")
+    status = clean_param(request, "status", 10)
     if status == "active":
         phrases = phrases.filter(is_active=True)
     elif status == "inactive":
@@ -129,7 +131,7 @@ def phrase_delete(request, pk):
         else:
             messages.success(request, "Phrase deleted.")
         return redirect("library:manage_phrases")
-    return render(request, "library/confirm_delete.html", {"object_name": phrase.cebuano_text, "kind": "phrase"})
+    return render(request, "library/confirm_delete.html", {"object_name": phrase.cebuano_text, "kind": "phrase", "cancel_url": reverse("library:manage_phrases")})
 
 
 @admin_only
@@ -140,7 +142,7 @@ def phrase_toggle(request, pk):
     phrase.save(update_fields=["is_active"])
     state = "activated" if phrase.is_active else "deactivated"
     messages.success(request, f"Phrase {state}.")
-    return redirect(request.POST.get("next") or "library:manage_phrases")
+    return safe_redirect(request, request.POST.get("next"), "library:manage_phrases")
 
 
 # ---------- Admin: categories ----------
@@ -187,4 +189,4 @@ def category_delete(request, pk):
         else:
             messages.success(request, "Category deleted.")
         return redirect("library:manage_categories")
-    return render(request, "library/confirm_delete.html", {"object_name": category.name, "kind": "category"})
+    return render(request, "library/confirm_delete.html", {"object_name": category.name, "kind": "category", "cancel_url": reverse("library:manage_categories")})

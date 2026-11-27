@@ -2,10 +2,12 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from accounts.models import User
+from accounts.utils import clean_param, safe_redirect
 from library.models import Category, Phrase
 
 from .forms import PhrasebookEntryForm
@@ -16,8 +18,8 @@ admin_only = role_required(User.Role.ADMIN)
 
 
 def _search(request, queryset):
-    q = request.GET.get("q", "").strip()
-    category_id = request.GET.get("category", "").strip()
+    q = clean_param(request, "q")
+    category_id = clean_param(request, "category", 10)
     if q:
         queryset = queryset.filter(
             Q(custom_text__icontains=q) | Q(note__icontains=q)
@@ -77,7 +79,7 @@ def entry_delete(request, pk):
         entry.delete()
         messages.success(request, "Removed from your phrasebook.")
         return redirect("phrasebook:my_phrasebook")
-    return render(request, "library/confirm_delete.html", {"object_name": entry.display_text, "kind": "phrasebook entry"})
+    return render(request, "library/confirm_delete.html", {"object_name": entry.display_text, "kind": "phrasebook entry", "cancel_url": reverse("phrasebook:my_phrasebook")})
 
 
 @student_only
@@ -90,11 +92,7 @@ def save_from_library(request, phrase_pk):
         messages.success(request, f"“{phrase.cebuano_text}” saved to your phrasebook.")
     else:
         messages.info(request, "That phrase is already in your phrasebook.")
-    next_url = request.POST.get("next", "")
-    # Only follow internal links
-    if next_url.startswith("/") and not next_url.startswith("//"):
-        return redirect(next_url)
-    return redirect("library:phrase_list")
+    return safe_redirect(request, request.POST.get("next"), "library:phrase_list")
 
 
 # ---------- Admin: read-only overview of all students ----------
@@ -104,7 +102,7 @@ def all_phrasebooks(request):
     entries, q, category_id = _search(
         request, PhrasebookEntry.objects.select_related("user", "phrase", "phrase__category")
     )
-    student = request.GET.get("student", "").strip()
+    student = clean_param(request, "student")
     if student:
         entries = entries.filter(Q(user__email__icontains=student) | Q(user__full_name__icontains=student))
     context = {
