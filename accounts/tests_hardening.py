@@ -1,4 +1,4 @@
-"""Tests for access control, safe redirects, error pages and settings (PD3 hardening)."""
+﻿"""Tests for access control, safe redirects, error pages and settings (PD3 hardening)."""
 
 import os
 import subprocess
@@ -58,7 +58,7 @@ class CsrfTests(TestCase):
     def test_every_post_form_in_templates_has_a_token(self):
         import re
         for path in Path(settings.BASE_DIR, "templates").rglob("*.html"):
-            for attrs, body in re.findall(r"<form([^>]*)>(.*?)</form>", path.read_text(), re.S):
+            for attrs, body in re.findall(r"<form([^>]*)>(.*?)</form>", path.read_text(encoding="utf-8"), re.S):
                 if 'method="post"' in attrs:
                     self.assertIn("csrf_token", body, f"{path} has a POST form without {{% csrf_token %}}")
 
