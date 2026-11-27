@@ -92,8 +92,11 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["full_name", "email", "home_region"]
-        labels = {"full_name": "Full name", "email": "Email address"}
+        fields = ["full_name", "email", "home_region", "profile_photo"]
+        labels = {
+            "full_name": "Full name", "email": "Email address",
+            "profile_photo": "Profile photo (optional – JPEG, PNG or WEBP, max 2 MB)",
+        }
 
     def clean_email(self):
         return clean_unique_email(self, self.cleaned_data["email"], exclude_pk=self.instance.pk)

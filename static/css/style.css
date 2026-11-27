@@ -111,3 +111,10 @@ a.danger, .danger { color: var(--danger) !important; }
 .badge.saved { background: #e8f5e9; margin-top: .6rem; }
 .phrase-card form { margin-top: .5rem; }
 .phrase-card form .btn { width: auto; }
+
+/* ---- Avatars ---- */
+.avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: .35rem; }
+.avatar-fallback { display: inline-flex; align-items: center; justify-content: center; background: var(--green); color: #fff; font-size: .8rem; font-weight: 600; }
+.avatar-lg { width: 72px; height: 72px; font-size: 1.8rem; margin-right: 0; }
+.profile-head { display: flex; align-items: center; gap: 1rem; margin-bottom: .5rem; }
+.profile-head h1 { margin: 0; }
