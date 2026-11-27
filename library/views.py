@@ -1,13 +1,16 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.decorators import role_required
 from accounts.models import User
+from accounts.utils import clean_param, safe_redirect
 from phrasebook.models import PhrasebookEntry
 
 from .forms import CategoryForm, PhraseForm
@@ -18,8 +21,8 @@ admin_only = role_required(User.Role.ADMIN)
 
 def _filter_phrases(request, queryset):
     """Apply the ?q= search and ?category= filter from the URL."""
-    q = request.GET.get("q", "").strip()
-    category_id = request.GET.get("category", "").strip()
+    q = clean_param(request, "q")
+    category_id = clean_param(request, "category", 10)
     if q:
         queryset = queryset.filter(
             Q(cebuano_text__icontains=q)
@@ -65,7 +68,7 @@ def phrase_list(request):
 @admin_only
 def manage_phrases(request):
     phrases, q, category_id = _filter_phrases(request, Phrase.objects.select_related("category"))
-    status = request.GET.get("status", "")
+    status = clean_param(request, "status", 10)
     if status == "active":
         phrases = phrases.filter(is_active=True)
     elif status == "inactive":
@@ -82,10 +85,11 @@ def manage_phrases(request):
 
 @admin_only
 def phrase_create(request):
-    form = PhraseForm(request.POST or None)
+    form = PhraseForm(request.POST or None, request.FILES or None)
     if request.method == "POST":
         if form.is_valid():
-            phrase = form.save()
+            with transaction.atomic():
+                phrase = form.save()
             messages.success(request, f"Phrase “{phrase.cebuano_text}” was added.")
             return redirect("library:manage_phrases")
         messages.error(request, "Please fix the errors below.")
@@ -95,10 +99,17 @@ def phrase_create(request):
 @admin_only
 def phrase_update(request, pk):
     phrase = get_object_or_404(Phrase, pk=pk)
-    form = PhraseForm(request.POST or None, instance=phrase)
+    old_audio = phrase.audio_file.name if phrase.audio_file else ""
+    form = PhraseForm(request.POST or None, request.FILES or None, instance=phrase)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                phrase = form.save()
+                new_audio = phrase.audio_file.name if phrase.audio_file else ""
+                if old_audio and old_audio != new_audio:
+                    # The old clip was replaced or cleared: remove it once the change is committed
+                    storage = Phrase._meta.get_field("audio_file").storage
+                    transaction.on_commit(lambda: storage.delete(old_audio))
             messages.success(request, "Phrase updated.")
             return redirect("library:manage_phrases")
         messages.error(request, "Please fix the errors below.")
@@ -110,7 +121,8 @@ def phrase_delete(request, pk):
     phrase = get_object_or_404(Phrase, pk=pk)
     if request.method == "POST":
         try:
-            phrase.delete()
+            with transaction.atomic():
+                phrase.delete()
         except ProtectedError:
             messages.error(
                 request,
@@ -120,7 +132,7 @@ def phrase_delete(request, pk):
         else:
             messages.success(request, "Phrase deleted.")
         return redirect("library:manage_phrases")
-    return render(request, "library/confirm_delete.html", {"object_name": phrase.cebuano_text, "kind": "phrase"})
+    return render(request, "library/confirm_delete.html", {"object_name": phrase.cebuano_text, "kind": "phrase", "cancel_url": reverse("library:manage_phrases")})
 
 
 @admin_only
@@ -131,7 +143,7 @@ def phrase_toggle(request, pk):
     phrase.save(update_fields=["is_active"])
     state = "activated" if phrase.is_active else "deactivated"
     messages.success(request, f"Phrase {state}.")
-    return redirect(request.POST.get("next") or "library:manage_phrases")
+    return safe_redirect(request, request.POST.get("next"), "library:manage_phrases")
 
 
 # ---------- Admin: categories ----------
@@ -147,7 +159,8 @@ def category_create(request):
     form = CategoryForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
-            category = form.save()
+            with transaction.atomic():
+                category = form.save()
             messages.success(request, f"Category “{category.name}” was added.")
             return redirect("library:manage_categories")
         messages.error(request, "Please fix the errors below.")
@@ -160,7 +173,8 @@ def category_update(request, pk):
     form = CategoryForm(request.POST or None, instance=category)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
             messages.success(request, "Category updated.")
             return redirect("library:manage_categories")
         messages.error(request, "Please fix the errors below.")
@@ -172,10 +186,11 @@ def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == "POST":
         try:
-            category.delete()
+            with transaction.atomic():
+                category.delete()
         except ProtectedError:
             messages.error(request, "This category still has phrases. Move or delete them first.")
         else:
             messages.success(request, "Category deleted.")
         return redirect("library:manage_categories")
-    return render(request, "library/confirm_delete.html", {"object_name": category.name, "kind": "category"})
+    return render(request, "library/confirm_delete.html", {"object_name": category.name, "kind": "category", "cancel_url": reverse("library:manage_categories")})

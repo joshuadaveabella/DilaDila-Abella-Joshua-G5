@@ -1,8 +1,18 @@
+import os
+import uuid
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+
+from .validators import validate_profile_photo
+
+
+def profile_photo_path(instance, filename):
+    """Random file name so uploads never clash or carry odd characters."""
+    return f"profile_photos/{uuid.uuid4().hex}{os.path.splitext(filename)[1].lower()}"
 
 
 class UserManager(BaseUserManager):
@@ -49,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     full_name = models.CharField(max_length=100)
     home_region = models.CharField(max_length=50, blank=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
+    profile_photo = models.ImageField(upload_to=profile_photo_path, blank=True, validators=[validate_profile_photo])
     created_at = models.DateTimeField(default=timezone.now)
 
     # Required by Django's admin / permissions system

@@ -16,9 +16,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-me")
-DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = [h for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+# DEBUG is controlled from .env and is OFF unless .env says DEBUG=True.
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# The secret key must come from .env; there is no built-in fallback key.
+SECRET_KEY = os.environ.get("SECRET_KEY", "").strip()
+if not SECRET_KEY or SECRET_KEY.startswith("change-me"):
+    raise ImproperlyConfigured("SECRET_KEY is not set. Put a long random value in your .env file.")
+
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+
+# Security headers and cookies
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+# Set SECURE_COOKIES=True in .env when the site is served over HTTPS
+SECURE_COOKIES = os.environ.get("SECURE_COOKIES", "False") == "True"
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"
 
 
 INSTALLED_APPS = [
@@ -116,5 +134,23 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Email (password reset). By default the email is printed in the terminal; set EMAIL_BACKEND and the
+# EMAIL_* variables in .env to send real email.
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Dila-Dila <noreply@dila-dila.local>")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links last 1 hour
+
+# Uploaded files (phrase audio, profile photos)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+# Reject oversized request bodies early (audio limit is 5 MB; leave room for the form fields)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

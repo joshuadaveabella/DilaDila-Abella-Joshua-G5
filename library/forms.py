@@ -24,14 +24,15 @@ class PhraseForm(forms.ModelForm):
         model = Phrase
         fields = [
             "category", "cebuano_text", "english_translation",
-            "regional_language", "regional_translation", "audio_url", "is_active",
+            "regional_language", "regional_translation", "audio_file", "audio_url", "is_active",
         ]
         labels = {
             "cebuano_text": "Cebuano phrase",
             "english_translation": "English translation",
             "regional_language": "Other language (optional)",
             "regional_translation": "Translation in other language (optional)",
-            "audio_url": "Audio link (optional)",
+            "audio_file": "Audio file (optional – MP3, WAV, OGG or M4A, max 5 MB)",
+            "audio_url": "Or an audio link (optional)",
             "is_active": "Active (visible to students)",
         }
 

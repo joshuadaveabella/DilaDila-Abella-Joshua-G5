@@ -206,3 +206,150 @@ class ProfileTests(TestCase):
     def test_profile_urls_have_no_user_id(self):
         # Only the logged-in user's own record is ever used, so nobody else's profile can be reached.
         self.assertEqual(reverse("accounts:profile"), "/accounts/profile/")
+
+
+# ---------------------------------------------------------------------------
+# ISS-04: profile photo, change password, forgot password
+# ---------------------------------------------------------------------------
+import io
+import os
+import shutil
+import tempfile
+
+from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
+from PIL import Image
+
+
+def image_bytes(fmt="PNG", size=(40, 40), pad=0):
+    buffer = io.BytesIO()
+    Image.new("RGB", size, "green").save(buffer, fmt)
+    return buffer.getvalue() + b"\x00" * pad
+
+
+class ProfilePhotoTests(TestCase):
+    def setUp(self):
+        self.media = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media)
+        self.override.enable()
+        self.user = make_student()
+        self.client.login(username="student@example.com", password=GOOD_PASSWORD)
+
+    def tearDown(self):
+        self.override.disable()
+        shutil.rmtree(self.media, ignore_errors=True)
+
+    def post(self, upload, **extra):
+        data = {"full_name": "Test Student", "email": "student@example.com", "home_region": ""}
+        if upload is not None:
+            data["profile_photo"] = upload
+        data.update(extra)
+        return self.client.post(reverse("accounts:profile_edit"), data)
+
+    def test_valid_photo_saved_with_random_name(self):
+        response = self.post(SimpleUploadedFile("my face.png", image_bytes(), content_type="image/png"))
+        self.assertRedirects(response, reverse("accounts:profile"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.profile_photo.name.startswith("profile_photos/"))
+        self.assertNotIn("my face", self.user.profile_photo.name)
+        self.assertContains(self.client.get(reverse("accounts:profile")), self.user.profile_photo.url)
+
+    def test_non_image_rejected(self):
+        response = self.post(SimpleUploadedFile("evil.png", b"not an image at all", content_type="image/png"))
+        self.assertContains(response, "valid image")
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.profile_photo)
+
+    def test_gif_rejected(self):
+        response = self.post(SimpleUploadedFile("a.gif", image_bytes("GIF"), content_type="image/gif"))
+        self.assertContains(response, "JPEG, PNG or WEBP")
+
+    def test_oversized_photo_rejected(self):
+        response = self.post(SimpleUploadedFile("big.png", image_bytes(pad=3 * 1024 * 1024), content_type="image/png"))
+        self.assertContains(response, "too large")
+
+    def test_replacing_photo_removes_old_file(self):
+        self.post(SimpleUploadedFile("a.png", image_bytes(), content_type="image/png"))
+        self.user.refresh_from_db()
+        old = self.user.profile_photo.path
+        with self.captureOnCommitCallbacks(execute=True):
+            self.post(SimpleUploadedFile("b.png", image_bytes(size=(50, 50)), content_type="image/png"))
+        self.user.refresh_from_db()
+        self.assertFalse(os.path.exists(old))
+        self.assertTrue(os.path.exists(self.user.profile_photo.path))
+
+    def test_photo_only_changes_own_account(self):
+        other = make_student("other@example.com")
+        self.post(SimpleUploadedFile("a.png", image_bytes(), content_type="image/png"))
+        other.refresh_from_db()
+        self.assertFalse(other.profile_photo)
+
+
+class ChangePasswordTests(TestCase):
+    def setUp(self):
+        self.user = make_student()
+
+    def post(self, **extra):
+        data = {"old_password": GOOD_PASSWORD, "new_password1": "Another-Strong-Pass-77", "new_password2": "Another-Strong-Pass-77"}
+        data.update(extra)
+        return self.client.post(reverse("accounts:password_change"), data)
+
+    def test_requires_login(self):
+        url = reverse("accounts:password_change")
+        self.assertRedirects(self.client.get(url), f"{reverse('accounts:login')}?next={url}")
+
+    def test_success_changes_password_and_keeps_session(self):
+        self.client.login(username="student@example.com", password=GOOD_PASSWORD)
+        response = self.post()
+        self.assertRedirects(response, reverse("accounts:profile"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Another-Strong-Pass-77"))
+        self.assertEqual(self.client.get(reverse("accounts:profile")).status_code, 200)
+
+    def test_wrong_old_password_rejected(self):
+        self.client.login(username="student@example.com", password=GOOD_PASSWORD)
+        response = self.post(old_password="wrong")
+        self.assertContains(response, "old password was entered incorrectly")
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(GOOD_PASSWORD))
+
+    def test_weak_or_mismatched_new_password_rejected(self):
+        self.client.login(username="student@example.com", password=GOOD_PASSWORD)
+        self.assertContains(self.post(new_password1="12345678", new_password2="12345678"), "error")
+        self.assertContains(self.post(new_password2="Different-Pass-1"), "did")
+
+
+class ForgotPasswordTests(TestCase):
+    def setUp(self):
+        self.user = make_student()
+
+    def test_known_email_sends_one_reset_email(self):
+        response = self.client.post(reverse("accounts:password_reset"), {"email": "student@example.com"})
+        self.assertRedirects(response, reverse("accounts:password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("/accounts/password/reset/", mail.outbox[0].body)
+
+    def test_unknown_email_gets_same_response_and_no_email(self):
+        response = self.client.post(reverse("accounts:password_reset"), {"email": "nobody@example.com"})
+        self.assertRedirects(response, reverse("accounts:password_reset_done"))  # does not reveal if the account exists
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_full_reset_flow(self):
+        self.client.post(reverse("accounts:password_reset"), {"email": "student@example.com"})
+        link = [line for line in mail.outbox[0].body.splitlines() if "/accounts/password/reset/" in line][0]
+        path = "/" + link.split("://", 1)[1].split("/", 1)[1]
+        page = self.client.get(path, follow=True)  # Django swaps the token for a session URL
+        self.assertContains(page, "Choose a new password")
+        response = self.client.post(page.request["PATH_INFO"],
+                                    {"new_password1": "Brand-New-Pass-2026", "new_password2": "Brand-New-Pass-2026"})
+        self.assertRedirects(response, reverse("accounts:password_reset_complete"))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("Brand-New-Pass-2026"))
+
+    def test_invalid_link_shows_error_page(self):
+        response = self.client.get(reverse("accounts:password_reset_confirm", args=["bad", "token"]))
+        self.assertContains(response, "Link not valid")
+
+    def test_login_page_links_to_forgot_password(self):
+        self.assertContains(self.client.get(reverse("accounts:login")), reverse("accounts:password_reset"))

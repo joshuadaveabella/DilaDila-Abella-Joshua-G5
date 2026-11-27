@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<section class="card auth-card center">
+  <p class="error-code">404</p>
+  <h1>Page not found</h1>
+  <p class="muted">We could not find what you were looking for. The link may be old, or the item may have been removed.</p>
+  <a class="btn" href="{% url 'home' %}">Go to my dashboard</a>
+</section>
+{% endblock %}

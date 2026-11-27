@@ -19,7 +19,10 @@
         {% if user.role == "STUDENT" %}<a href="{% url 'phrasebook:my_phrasebook' %}">My phrasebook</a>{% endif %}
         {% if user.role == "ADMIN" %}<a href="{% url 'library:manage_phrases' %}">Manage</a>
         <a href="{% url 'phrasebook:all_phrasebooks' %}">Phrasebooks</a>{% endif %}
-        <a href="{% url 'accounts:profile' %}">Profile</a>
+        <a href="{% url 'accounts:profile' %}" class="profile-link">
+          {% if user.profile_photo %}<img class="avatar" src="{{ user.profile_photo.url }}" alt="">{% else %}<span class="avatar avatar-fallback" aria-hidden="true">{{ user.full_name|slice:":1"|upper }}</span>{% endif %}
+          Profile
+        </a>
         <form method="post" action="{% url 'accounts:logout' %}" class="inline">
           {% csrf_token %}
           <button type="submit" class="link-button">Log out</button>
@@ -43,5 +46,6 @@
   </main>
 
   <footer class="footer">Dila-Dila · Learning Bisaya, one conversation at a time</footer>
+  <script src="{% static 'js/forms.js' %}" defer></script>
 </body>
 </html>
