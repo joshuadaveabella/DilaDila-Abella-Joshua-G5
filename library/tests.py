@@ -219,3 +219,118 @@ class DashboardTests(LibraryTestBase):
         self.assertContains(response, reverse("library:manage_phrases"))
         self.assertEqual(response.context["total_phrases"], 3)
         self.assertEqual(response.context["total_categories"], 2)
+
+
+# ---------------------------------------------------------------------------
+# ISS-01: audio file upload
+# ---------------------------------------------------------------------------
+import io
+import os
+import shutil
+import tempfile
+import wave
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
+
+
+def make_wav_bytes():
+    """A real (tiny) WAV file."""
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(8000)
+        w.writeframes(b"\x00\x00" * 800)
+    return buffer.getvalue()
+
+
+class AudioUploadTests(LibraryTestBase):
+    def setUp(self):
+        super().setUp()
+        self.media = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media)
+        self.override.enable()
+        self.login("admin")
+
+    def tearDown(self):
+        self.override.disable()
+        shutil.rmtree(self.media, ignore_errors=True)
+
+    def post(self, upload=None, **extra):
+        data = {"category": self.school.pk, "cebuano_text": "Unsa'y oras?", "english_translation": "What time is it?",
+                "regional_language": "", "regional_translation": "", "audio_url": "", "is_active": "on"}
+        if upload is not None:
+            data["audio_file"] = upload
+        data.update(extra)
+        return self.client.post(reverse("library:phrase_create"), data)
+
+    def wav(self, name="clip.wav"):
+        return SimpleUploadedFile(name, make_wav_bytes(), content_type="audio/wav")
+
+    def test_valid_wav_is_saved_and_gets_a_random_name(self):
+        response = self.post(self.wav("My Clip!!.wav"))
+        self.assertEqual(response.status_code, 302)
+        phrase = Phrase.objects.get(cebuano_text="Unsa'y oras?")
+        self.assertTrue(phrase.audio_file.name.startswith("phrase_audio/"))
+        self.assertNotIn("My Clip", phrase.audio_file.name)
+        self.assertTrue(os.path.exists(phrase.audio_file.path))
+
+    def test_player_uses_uploaded_file(self):
+        self.post(self.wav())
+        phrase = Phrase.objects.get(cebuano_text="Unsa'y oras?")
+        self.client.logout()
+        self.login("student")
+        response = self.client.get(reverse("library:phrase_list"))
+        self.assertContains(response, f'<audio controls preload="none" src="{phrase.audio_file.url}">')
+
+    def test_player_falls_back_to_link(self):
+        self.post(audio_url="https://example.com/clip.mp3")
+        phrase = Phrase.objects.get(cebuano_text="Unsa'y oras?")
+        self.assertEqual(phrase.audio_src, "https://example.com/clip.mp3")
+
+    def test_wrong_extension_rejected(self):
+        response = self.post(SimpleUploadedFile("virus.exe", b"MZ....", content_type="application/octet-stream"))
+        self.assertContains(response, "Unsupported audio type")
+        self.assertFalse(Phrase.objects.filter(cebuano_text="Unsa'y oras?").exists())
+
+    def test_fake_audio_content_rejected(self):
+        response = self.post(SimpleUploadedFile("fake.mp3", b"<script>alert(1)</script>", content_type="audio/mpeg"))
+        self.assertContains(response, "not a valid audio file")
+        self.assertFalse(Phrase.objects.filter(cebuano_text="Unsa'y oras?").exists())
+
+    def test_oversized_file_rejected(self):
+        big = SimpleUploadedFile("big.wav", make_wav_bytes() + b"\x00" * (5 * 1024 * 1024), content_type="audio/wav")
+        response = self.post(big)
+        self.assertContains(response, "too large")
+
+    def test_replacing_audio_removes_old_file(self):
+        self.post(self.wav())
+        phrase = Phrase.objects.get(cebuano_text="Unsa'y oras?")
+        old_path = phrase.audio_file.path
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                reverse("library:phrase_update", args=[phrase.pk]),
+                {"category": self.school.pk, "cebuano_text": "Unsa'y oras?", "english_translation": "What time is it?",
+                 "regional_language": "", "regional_translation": "", "audio_url": "", "is_active": "on",
+                 "audio_file": self.wav("new.wav")},
+            )
+        phrase.refresh_from_db()
+        self.assertNotEqual(phrase.audio_file.path, old_path)
+        self.assertFalse(os.path.exists(old_path))
+        self.assertTrue(os.path.exists(phrase.audio_file.path))
+
+    def test_deleting_phrase_removes_file(self):
+        self.post(self.wav())
+        phrase = Phrase.objects.get(cebuano_text="Unsa'y oras?")
+        path = phrase.audio_file.path
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("library:phrase_delete", args=[phrase.pk]))
+        self.assertFalse(os.path.exists(path))
+
+    def test_student_cannot_upload(self):
+        self.client.logout()
+        self.login("student")
+        response = self.post(self.wav())
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Phrase.objects.filter(cebuano_text="Unsa'y oras?").exists())
