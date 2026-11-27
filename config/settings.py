@@ -16,9 +16,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-me")
-DEBUG = os.environ.get("DEBUG", "True") == "True"
-ALLOWED_HOSTS = [h for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
+# DEBUG is controlled from .env and is OFF unless .env says DEBUG=True.
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# The secret key must come from .env; there is no built-in fallback key.
+SECRET_KEY = os.environ.get("SECRET_KEY", "").strip()
+if not SECRET_KEY or SECRET_KEY.startswith("change-me"):
+    raise ImproperlyConfigured("SECRET_KEY is not set. Put a long random value in your .env file.")
+
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+
+# Security headers and cookies
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+# Set SECURE_COOKIES=True in .env when the site is served over HTTPS
+SECURE_COOKIES = os.environ.get("SECURE_COOKIES", "False") == "True"
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+CSRF_FAILURE_VIEW = "accounts.views.csrf_failure"
 
 
 INSTALLED_APPS = [

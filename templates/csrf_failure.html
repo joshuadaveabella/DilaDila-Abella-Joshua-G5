@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Session expired{% endblock %}
+{% block content %}
+<section class="card auth-card center">
+  <p class="error-code">403</p>
+  <h1>This page expired</h1>
+  <p class="muted">Your form could not be verified, usually because the page was open for a long time. Nothing was saved. Please go back, reload the page and try again.</p>
+  <a class="btn" href="{% url 'home' %}">Go to my dashboard</a>
+</section>
+{% endblock %}

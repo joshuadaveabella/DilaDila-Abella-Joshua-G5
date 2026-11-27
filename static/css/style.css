@@ -118,3 +118,5 @@ a.danger, .danger { color: var(--danger) !important; }
 .avatar-lg { width: 72px; height: 72px; font-size: 1.8rem; margin-right: 0; }
 .profile-head { display: flex; align-items: center; gap: 1rem; margin-bottom: .5rem; }
 .profile-head h1 { margin: 0; }
+
+.error-code { font-family: "Fraunces", Georgia, serif; font-size: 3.2rem; color: var(--green); margin: 0; line-height: 1; }
