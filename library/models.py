@@ -24,6 +24,9 @@ class Category(models.Model):
         db_table = "categories"
         ordering = ["name"]
         verbose_name_plural = "categories"
+        constraints = [
+            models.CheckConstraint(condition=models.Q(name__regex=r"\S"), name="categories_name_not_blank"),
+        ]
 
     def __str__(self):
         return self.name
@@ -54,6 +57,9 @@ class Phrase(models.Model):
         constraints = [
             # BR-05: same Cebuano text cannot appear twice in one category
             models.UniqueConstraint(fields=["category", "cebuano_text"], name="phrases_category_text_uniq"),
+            # Text columns may not be empty or only spaces, even if a view or form is bypassed
+            models.CheckConstraint(condition=models.Q(cebuano_text__regex=r"\S"), name="phrases_cebuano_not_blank"),
+            models.CheckConstraint(condition=models.Q(english_translation__regex=r"\S"), name="phrases_english_not_blank"),
         ]
 
     def __str__(self):

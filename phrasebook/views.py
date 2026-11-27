@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db import transaction
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -51,7 +52,8 @@ def entry_create(request):
     form = PhrasebookEntryForm(request.POST or None, user=request.user)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
             messages.success(request, "Added to your phrasebook.")
             return redirect("phrasebook:my_phrasebook")
         messages.error(request, "Please fix the errors below.")
@@ -65,7 +67,8 @@ def entry_update(request, pk):
     form = PhrasebookEntryForm(request.POST or None, instance=entry, user=request.user)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
             messages.success(request, "Phrasebook entry updated.")
             return redirect("phrasebook:my_phrasebook")
         messages.error(request, "Please fix the errors below.")
@@ -76,7 +79,8 @@ def entry_update(request, pk):
 def entry_delete(request, pk):
     entry = get_object_or_404(PhrasebookEntry, pk=pk, user=request.user)
     if request.method == "POST":
-        entry.delete()
+        with transaction.atomic():
+            entry.delete()
         messages.success(request, "Removed from your phrasebook.")
         return redirect("phrasebook:my_phrasebook")
     return render(request, "library/confirm_delete.html", {"object_name": entry.display_text, "kind": "phrasebook entry", "cancel_url": reverse("phrasebook:my_phrasebook")})
@@ -87,7 +91,8 @@ def entry_delete(request, pk):
 def save_from_library(request, phrase_pk):
     """One-click 'Save to my phrasebook' button on the phrase library."""
     phrase = get_object_or_404(Phrase, pk=phrase_pk, is_active=True)
-    entry, created = PhrasebookEntry.objects.get_or_create(user=request.user, phrase=phrase)
+    with transaction.atomic():
+        entry, created = PhrasebookEntry.objects.get_or_create(user=request.user, phrase=phrase)
     if created:
         messages.success(request, f"“{phrase.cebuano_text}” saved to your phrasebook.")
     else:

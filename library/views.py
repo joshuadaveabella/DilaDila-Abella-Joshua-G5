@@ -121,7 +121,8 @@ def phrase_delete(request, pk):
     phrase = get_object_or_404(Phrase, pk=pk)
     if request.method == "POST":
         try:
-            phrase.delete()
+            with transaction.atomic():
+                phrase.delete()
         except ProtectedError:
             messages.error(
                 request,
@@ -158,7 +159,8 @@ def category_create(request):
     form = CategoryForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
-            category = form.save()
+            with transaction.atomic():
+                category = form.save()
             messages.success(request, f"Category “{category.name}” was added.")
             return redirect("library:manage_categories")
         messages.error(request, "Please fix the errors below.")
@@ -171,7 +173,8 @@ def category_update(request, pk):
     form = CategoryForm(request.POST or None, instance=category)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
             messages.success(request, "Category updated.")
             return redirect("library:manage_categories")
         messages.error(request, "Please fix the errors below.")
@@ -183,7 +186,8 @@ def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == "POST":
         try:
-            category.delete()
+            with transaction.atomic():
+                category.delete()
         except ProtectedError:
             messages.error(request, "This category still has phrases. Move or delete them first.")
         else:
