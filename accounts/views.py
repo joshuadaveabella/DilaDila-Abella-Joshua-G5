@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView, PasswordChangeView
+from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
 from django.db import transaction
 from django.urls import reverse_lazy
 from django.shortcuts import redirect, render
@@ -118,3 +118,17 @@ class DilaPasswordChangeView(PasswordChangeView):
     def form_valid(self, form):
         messages.success(self.request, "Your password was changed.")
         return super().form_valid(form)
+
+
+def csrf_failure(request, reason=""):
+    """Shown when a form is sent without a valid CSRF token (for example an expired page)."""
+    return render(request, "csrf_failure.html", status=403)
+
+
+class DilaLogoutView(LogoutView):
+    """Logout (POST only) with a confirmation message."""
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        messages.info(request, "You have been logged out.")
+        return response
