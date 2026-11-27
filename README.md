@@ -49,12 +49,37 @@ New students can also register at `/accounts/register/`. Extra admins: `python m
 
 ## Tests
 ```bash
-python manage.py test
+python manage.py test                        # whole suite (about 160 tests)
+python manage.py test library                # one app
+python manage.py test library.tests_core     # the core-feature suite (valid/invalid input, login, access control)
 ```
-Runs against PostgreSQL (Django creates a temporary `test_` database, so your `DATABASE_URL` user needs permission to create databases; use a local PostgreSQL for this).
+Tests run against PostgreSQL. Django creates a temporary `test_` database, so the database user in `DATABASE_URL` must be allowed to create databases. Supabase usually does not allow this, so for tests use a local PostgreSQL by putting these two lines in `.env`:
+```
+USE_LOCAL_TEST_DB=True
+LOCAL_TEST_DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/dila_dila_test
+```
+
+| Test file | What it checks |
+|---|---|
+| `library/tests.py`, `phrasebook/tests.py` | PD2 feature behaviour, audio upload |
+| `library/tests_core.py` | Core-feature suite, route protection of every URL |
+| `library/tests_integrity.py` | DB constraints, on_delete, atomic saves, query counts |
+| `accounts/tests.py`, `accounts/tests_hardening.py` | Standard features, safe redirects, CSRF, error pages, settings |
+
+## Configuration (`.env`, never committed)
+| Variable | Meaning |
+|---|---|
+| `SECRET_KEY` | **Required.** The app refuses to start without a real value. |
+| `DEBUG` | `False` unless set to `True` (use `True` only on your own computer). |
+| `ALLOWED_HOSTS` | Comma-separated hosts, default `localhost,127.0.0.1`. |
+| `DATABASE_URL` | PostgreSQL / Supabase *Session pooler* string. |
+| `SECURE_COOKIES` | `True` on HTTPS hosting. |
+| `EMAIL_*` | Optional SMTP settings. By default password-reset emails print in the terminal. |
+
+Generate a key: `python -c "from django.core.management.utils import get_random_secret_key as g; print(g())"`
 
 ## Branching
-`main` (stable) ← `develop` (integration) ← `feature/phrase-library`, `feature/personal-phrasebook`. Work is merged through Pull Requests.
+`main` (stable) ← `develop` (integration) ← work branches (`feature/...` in PD2; `fix/...`, `hardening/...`, `test/...` in PD3). Work is merged through Pull Requests; merged branches are kept.
 
 ## Database design
-Tables follow the SDD (`docs/` holds the PD2 completion report). Small differences from the SDD are listed in the report under Outstanding Issues.
+Tables follow the SDD (`docs/` holds the PD2 and PD3 reports and `SDD-Addendum-PD3.md`). Small differences from the SDD are listed in the report under Outstanding Issues.
