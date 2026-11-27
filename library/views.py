@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Count, Q
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
@@ -82,10 +83,11 @@ def manage_phrases(request):
 
 @admin_only
 def phrase_create(request):
-    form = PhraseForm(request.POST or None)
+    form = PhraseForm(request.POST or None, request.FILES or None)
     if request.method == "POST":
         if form.is_valid():
-            phrase = form.save()
+            with transaction.atomic():
+                phrase = form.save()
             messages.success(request, f"Phrase “{phrase.cebuano_text}” was added.")
             return redirect("library:manage_phrases")
         messages.error(request, "Please fix the errors below.")
@@ -95,10 +97,17 @@ def phrase_create(request):
 @admin_only
 def phrase_update(request, pk):
     phrase = get_object_or_404(Phrase, pk=pk)
-    form = PhraseForm(request.POST or None, instance=phrase)
+    old_audio = phrase.audio_file.name if phrase.audio_file else ""
+    form = PhraseForm(request.POST or None, request.FILES or None, instance=phrase)
     if request.method == "POST":
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                phrase = form.save()
+                new_audio = phrase.audio_file.name if phrase.audio_file else ""
+                if old_audio and old_audio != new_audio:
+                    # The old clip was replaced or cleared: remove it once the change is committed
+                    storage = Phrase._meta.get_field("audio_file").storage
+                    transaction.on_commit(lambda: storage.delete(old_audio))
             messages.success(request, "Phrase updated.")
             return redirect("library:manage_phrases")
         messages.error(request, "Please fix the errors below.")
