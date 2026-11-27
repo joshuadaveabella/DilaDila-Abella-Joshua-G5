@@ -37,6 +37,11 @@ class PhrasebookEntry(models.Model):
                 condition=Q(phrase__isnull=False) | Q(custom_text__isnull=False),
                 name="phrasebook_phrase_or_text_check",
             ),
+            # custom_text is NULL or real text, never an empty/space-only string
+            models.CheckConstraint(
+                condition=Q(custom_text__isnull=True) | Q(custom_text__regex=r"\S"),
+                name="phrasebook_custom_text_not_blank",
+            ),
             # A student can save the same library phrase only once
             models.UniqueConstraint(
                 fields=["user", "phrase"], condition=Q(phrase__isnull=False),
