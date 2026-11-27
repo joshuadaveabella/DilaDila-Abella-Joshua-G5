@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordChangeView
+from django.db import transaction
+from django.urls import reverse_lazy
 from django.shortcuts import redirect, render
 
 from .decorators import role_required
@@ -84,10 +86,16 @@ def profile(request):
 @login_required
 def profile_edit(request):
     """Edit the logged-in user's own profile."""
+    old_photo = request.user.profile_photo.name if request.user.profile_photo else ""
     if request.method == "POST":
-        form = ProfileForm(request.POST, instance=request.user)
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                user = form.save()
+                new_photo = user.profile_photo.name if user.profile_photo else ""
+                if old_photo and old_photo != new_photo:
+                    storage = User._meta.get_field("profile_photo").storage
+                    transaction.on_commit(lambda: storage.delete(old_photo))
             messages.success(request, "Your profile was updated.")
             return redirect("accounts:profile")
         messages.error(request, "Please fix the errors below.")
@@ -99,3 +107,14 @@ def profile_edit(request):
 def permission_denied(request, exception=None):
     """Friendly 403 page, shown when a user opens another role's page."""
     return render(request, "403.html", status=403)
+
+
+class DilaPasswordChangeView(PasswordChangeView):
+    """Logged-in users change their own password (the old password is required)."""
+
+    template_name = "accounts/password_change.html"
+    success_url = reverse_lazy("accounts:profile")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Your password was changed.")
+        return super().form_valid(form)

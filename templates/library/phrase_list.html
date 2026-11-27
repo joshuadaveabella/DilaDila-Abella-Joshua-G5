@@ -21,7 +21,7 @@
         {% if phrase.regional_translation %}
           <p class="muted small">{{ phrase.regional_language }}: {{ phrase.regional_translation }}</p>
         {% endif %}
-        {% if phrase.audio_url %}<audio controls preload="none" src="{{ phrase.audio_url }}"></audio>{% endif %}
+        {% if phrase.audio_src %}<audio controls preload="none" src="{{ phrase.audio_src }}"></audio>{% endif %}
         {% if user.role == "STUDENT" %}
           {% if phrase.pk in saved_ids %}
             <span class="badge saved">&#10003; In your phrasebook</span>

@@ -117,4 +117,22 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# Email (password reset). By default the email is printed in the terminal; set EMAIL_BACKEND and the
+# EMAIL_* variables in .env to send real email.
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "Dila-Dila <noreply@dila-dila.local>")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links last 1 hour
+
+# Uploaded files (phrase audio, profile photos)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+# Reject oversized request bodies early (audio limit is 5 MB; leave room for the form fields)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
